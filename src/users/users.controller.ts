@@ -1,9 +1,16 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { Request } from 'express';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './user.dto';
 import { User } from './user.model';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UserID } from './userId.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -11,12 +18,17 @@ export class UsersController {
 
   @Post()
   async create(@Body() body: UserDto): Promise<User> {
-    return this.usersService.create(body);
+    try {
+      const newUser = await this.usersService.create(body);
+      return newUser;
+    } catch (_) {
+      throw new ConflictException();
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async profile(@Req() req: Request) {
-    return req.user;
+  async profile(@UserID() userId: string) {
+    return this.usersService.profile(userId);
   }
 }

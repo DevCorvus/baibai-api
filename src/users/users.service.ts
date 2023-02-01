@@ -26,4 +26,20 @@ export class UsersService {
       },
     });
   }
+
+  profile(id: string): Promise<User> {
+    return this.userModel.findOne({
+      where: { id },
+      attributes: { exclude: ['password'] },
+    });
+  }
+
+  async isAdmin(id: string): Promise<boolean> {
+    const user = await this.userModel.findOne({
+      where: { id },
+      attributes: { include: ['admin'] },
+    });
+
+    return user.admin;
+  }
 }

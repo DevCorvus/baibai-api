@@ -1,22 +1,26 @@
+import { UUIDV4 } from 'sequelize';
 import {
   Table,
   Model,
   Column,
-  CreatedAt,
-  UpdatedAt,
+  PrimaryKey,
+  Default,
 } from 'sequelize-typescript';
 
-@Table
+@Table({ timestamps: true })
 export class User extends Model {
+  @Default(UUIDV4)
+  @PrimaryKey
+  @Column
+  id: string;
+
   @Column({ unique: true })
   username: string;
 
   @Column
   password: string;
 
-  @CreatedAt
-  createdAt: Date;
-
-  @UpdatedAt
-  updatedAt: Date;
+  @Default(false)
+  @Column
+  admin: boolean;
 }
