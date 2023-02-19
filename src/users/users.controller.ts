@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './user.dto';
-import { User } from './user.model';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserID } from './userId.decorator';
 
@@ -17,12 +16,12 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post()
-  async create(@Body() body: UserDto): Promise<User> {
+  async create(@Body() body: UserDto): Promise<void> {
     try {
-      const newUser = await this.usersService.create(body);
-      return newUser;
+      await this.usersService.create(body);
+      return;
     } catch (_) {
-      throw new ConflictException();
+      throw new ConflictException('User already exists');
     }
   }
 
