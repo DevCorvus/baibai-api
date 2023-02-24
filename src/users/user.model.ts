@@ -5,7 +5,9 @@ import {
   Column,
   PrimaryKey,
   Default,
+  HasMany,
 } from 'sequelize-typescript';
+import { Product } from 'src/products/product.model';
 
 @Table({ timestamps: true })
 export class User extends Model {
@@ -23,4 +25,7 @@ export class User extends Model {
   @Default(false)
   @Column
   admin: boolean;
+
+  @HasMany(() => Product)
+  products: Product[];
 }

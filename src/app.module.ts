@@ -6,6 +6,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     }),
     UsersModule,
     AuthModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
