@@ -9,8 +9,8 @@ const displayableProductListAttributes = [
   'name',
   'price',
   'quantity',
+  'status',
   'previewImageUrl',
-  'location',
   'createdAt',
 ];
 
@@ -34,7 +34,7 @@ export class ProductsService {
   findOne(id: string): Promise<Product | null> {
     return this.productModel.findOne({
       where: { id },
-      include: [{ model: User, attributes: ['id', 'username'] }],
+      include: [{ model: User, attributes: ['username', 'createdAt'] }],
     });
   }
 
