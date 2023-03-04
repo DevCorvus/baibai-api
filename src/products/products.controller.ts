@@ -14,6 +14,7 @@ import { Product } from './product.model';
 import { ProductDto } from './product.dto';
 import { UserID } from 'src/users/userId.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { COUNTRIES } from '../data/countries';
 
 @Controller('products')
 export class ProductsController {
@@ -22,6 +23,11 @@ export class ProductsController {
   @Get()
   findAll(): Promise<Product[]> {
     return this.productsService.findAll();
+  }
+
+  @Get('locations')
+  locations(): string[] {
+    return COUNTRIES;
   }
 
   @Get(':productId')
