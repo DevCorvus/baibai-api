@@ -37,3 +37,4 @@ lerna-debug.log*
 *.sqlite
 *.rest
 *.env
+uploads

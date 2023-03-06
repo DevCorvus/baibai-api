@@ -6,6 +6,7 @@ import {
   IsPositive,
   ValidateIf,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ProductStatus, ProductStatusType } from './product.model';
 import { COUNTRIES } from '../data/countries';
 
@@ -20,8 +21,9 @@ export class ProductDto {
   @IsCurrency()
   price: string;
 
-  @IsInt()
   @IsPositive()
+  @IsInt()
+  @Type(() => Number)
   quantity: number;
 
   @IsIn(COUNTRIES)

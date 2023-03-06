@@ -38,8 +38,12 @@ export class ProductsService {
     });
   }
 
-  create(userId: string, data: ProductDto): Promise<Product> {
-    return this.productModel.create({ ...data, userId });
+  create(userId: string, data: ProductDto, filename: string): Promise<Product> {
+    return this.productModel.create({
+      ...data,
+      userId,
+      previewImageUrl: filename,
+    });
   }
 
   async update(id: string, userId: string, data: ProductDto): Promise<boolean> {
