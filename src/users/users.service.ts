@@ -19,11 +19,12 @@ export class UsersService {
     });
   }
 
-  findOne(username: string): Promise<User> {
+  findOne(username: string, attributes?: string[]): Promise<User | null> {
     return this.userModel.findOne({
       where: {
         username,
       },
+      attributes,
     });
   }
 

@@ -6,6 +6,7 @@ import { Product } from './product.model';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { randomBytes } from 'crypto';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { randomBytes } from 'crypto';
         },
       }),
     }),
+    UsersModule,
   ],
   controllers: [ProductsController],
   providers: [ProductsService],

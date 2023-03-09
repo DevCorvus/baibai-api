@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ProductDto } from './product.dto';
 import { User } from 'src/users/user.model';
+import { UsersService } from 'src/users/users.service';
 
 const displayableProductListAttributes = [
   'id',
@@ -16,7 +17,10 @@ const displayableProductListAttributes = [
 
 @Injectable()
 export class ProductsService {
-  constructor(@InjectModel(Product) private productModel: typeof Product) {}
+  constructor(
+    @InjectModel(Product) private productModel: typeof Product,
+    private usersService: UsersService,
+  ) {}
 
   findAll(): Promise<Product[]> {
     return this.productModel.findAll({
@@ -24,9 +28,13 @@ export class ProductsService {
     });
   }
 
-  findAllFromUser(userId: string): Promise<Product[]> {
+  async findAllFromUsername(username: string): Promise<Product[]> {
+    const user = await this.usersService.findOne(username, ['id']);
+
+    if (!user) return [];
+
     return this.productModel.findAll({
-      where: { userId },
+      where: { userId: user.id },
       attributes: displayableProductListAttributes,
     });
   }

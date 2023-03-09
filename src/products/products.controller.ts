@@ -15,6 +15,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './product.model';
@@ -34,7 +35,9 @@ export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
   @Get()
-  findAll(): Promise<Product[]> {
+  findAll(@Query('username') username: string): Promise<Product[]> {
+    if (username) return this.productsService.findAllFromUsername(username);
+
     return this.productsService.findAll();
   }
 
