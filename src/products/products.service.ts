@@ -54,9 +54,17 @@ export class ProductsService {
     });
   }
 
-  async update(id: string, userId: string, data: ProductDto): Promise<boolean> {
+  async update(
+    id: string,
+    userId: string,
+    data: ProductDto,
+    filename?: string,
+  ): Promise<boolean> {
     const result = (
-      await this.productModel.update(data, { where: { id, userId } })
+      await this.productModel.update(
+        { ...data, previewImageUrl: filename },
+        { where: { id, userId } },
+      )
     )[0];
     return result > 0;
   }

@@ -2,17 +2,13 @@ import {
   Body,
   Controller,
   Delete,
-  FileTypeValidator,
   Get,
-  MaxFileSizeValidator,
   NotFoundException,
   Param,
-  ParseFilePipe,
   Post,
   Put,
   Req,
   Res,
-  UploadedFile,
   UseGuards,
   UseInterceptors,
   Query,
@@ -26,9 +22,8 @@ import { COUNTRIES } from '../data/countries';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { unlink as deleteFile, existsSync as fileExists } from 'fs';
 import { Request, Response } from 'express';
-
-const MAX_FILE_SIZE = 1024 * 1024; // 1 MB
-const ALLOWED_FILE_TYPES = /image\/(jpg|jpeg|png|webp)/;
+import { UploadedProductImage } from './product-image-upload.decorator';
+import * as path from 'path';
 
 @Controller('products')
 export class ProductsController {
@@ -51,7 +46,9 @@ export class ProductsController {
     @Param('filename') filename: string,
     @Res() res: Response,
   ) {
-    if (!fileExists(`uploads/${filename}`)) throw new NotFoundException();
+    if (!fileExists(path.resolve('uploads', filename))) {
+      throw new NotFoundException();
+    }
     res.sendFile(filename, { root: 'uploads' });
   }
 
@@ -71,14 +68,7 @@ export class ProductsController {
   async create(
     @UserID() userId: string,
     @Body() body: ProductDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE }),
-          new FileTypeValidator({ fileType: ALLOWED_FILE_TYPES }),
-        ],
-      }),
-    )
+    @UploadedProductImage()
     image: Express.Multer.File,
     @Req() req: Request,
   ): Promise<Product> {
@@ -106,6 +96,46 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  @Put(':productId/multipart')
+  async updateWithImage(
+    @UserID() userId: string,
+    @Param('productId') productId: string,
+    @Body() body: ProductDto,
+    @UploadedProductImage()
+    image: Express.Multer.File,
+    @Req() req: Request,
+  ): Promise<boolean> {
+    try {
+      const product = await this.productsService.findOne(productId);
+
+      if (product) {
+        const updated = await this.productsService.update(
+          productId,
+          userId,
+          body,
+          req['filename'],
+        );
+
+        if (updated) {
+          const previousImagePath = path.resolve(
+            'uploads',
+            product.previewImageUrl,
+          );
+          deleteFile(previousImagePath, console.error);
+        }
+
+        return updated;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      deleteFile(image.path, console.error);
+      throw error;
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':productId')
   async delete(
     @UserID() userId: string,
@@ -114,8 +144,14 @@ export class ProductsController {
     const product = await this.productsService.findOne(productId);
 
     if (product) {
-      // TODO: Delete product image
-      return this.productsService.delete(productId, userId);
+      const deleted = await this.productsService.delete(productId, userId);
+
+      if (deleted) {
+        const imagePath = path.resolve('uploads', product.previewImageUrl);
+        deleteFile(imagePath, console.error);
+      }
+
+      return deleted;
     } else {
       return false;
     }
