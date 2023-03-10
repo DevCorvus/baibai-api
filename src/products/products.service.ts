@@ -4,6 +4,12 @@ import { InjectModel } from '@nestjs/sequelize';
 import { ProductDto } from './product.dto';
 import { User } from 'src/users/user.model';
 import { UsersService } from 'src/users/users.service';
+import { Op, WhereOptions } from 'sequelize';
+
+export interface FindAllInterface {
+  search?: string;
+  username?: string;
+}
 
 const displayableProductListAttributes = [
   'id',
@@ -22,19 +28,21 @@ export class ProductsService {
     private usersService: UsersService,
   ) {}
 
-  findAll(): Promise<Product[]> {
+  async findAll({ search, username }: FindAllInterface): Promise<Product[]> {
+    const where: WhereOptions<any> = {};
+
+    if (search) where.name = { [Op.like]: `%${search}%` };
+    if (username) {
+      const user = await this.usersService.findOne(username, ['id']);
+      if (user) {
+        where.userId = user.id;
+      } else {
+        return [];
+      }
+    }
+
     return this.productModel.findAll({
-      attributes: displayableProductListAttributes,
-    });
-  }
-
-  async findAllFromUsername(username: string): Promise<Product[]> {
-    const user = await this.usersService.findOne(username, ['id']);
-
-    if (!user) return [];
-
-    return this.productModel.findAll({
-      where: { userId: user.id },
+      where,
       attributes: displayableProductListAttributes,
     });
   }

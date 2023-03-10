@@ -13,7 +13,7 @@ import {
   UseInterceptors,
   Query,
 } from '@nestjs/common';
-import { ProductsService } from './products.service';
+import { FindAllInterface, ProductsService } from './products.service';
 import { Product } from './product.model';
 import { ProductDto } from './product.dto';
 import { UserID } from 'src/users/userId.decorator';
@@ -30,10 +30,8 @@ export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
   @Get()
-  findAll(@Query('username') username: string): Promise<Product[]> {
-    if (username) return this.productsService.findAllFromUsername(username);
-
-    return this.productsService.findAll();
+  findAll(@Query() queries: FindAllInterface): Promise<Product[]> {
+    return this.productsService.findAll(queries);
   }
 
   @Get('locations')
