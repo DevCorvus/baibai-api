@@ -7,7 +7,7 @@ import {
   Default,
   HasMany,
 } from 'sequelize-typescript';
-import { Product } from 'src/products/product.model';
+import { Product } from '../products/product.model';
 
 @Table({ timestamps: true })
 export class User extends Model {

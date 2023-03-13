@@ -1,9 +1,9 @@
-import { Product } from 'src/products/product.model';
+import { Product } from '../products/product.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ProductDto } from './product.dto';
-import { User } from 'src/users/user.model';
-import { UsersService } from 'src/users/users.service';
+import { User } from '../users/user.model';
+import { UsersService } from '../users/users.service';
 import { Op, WhereOptions } from 'sequelize';
 
 export interface FindAllInterface {

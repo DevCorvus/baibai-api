@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
@@ -18,11 +18,14 @@ import { ProductsModule } from './products/products.module';
       ttl: 60,
       limit: 10,
     }),
-    SequelizeModule.forRoot({
-      dialect: 'sqlite',
-      storage: './db.sqlite',
-      autoLoadModels: true,
-      synchronize: true,
+    SequelizeModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        dialect: 'sqlite',
+        storage: config.get('NODE_ENV') === 'test' ? ':memory:' : './db.sqlite',
+        autoLoadModels: true,
+        synchronize: true,
+      }),
     }),
     UsersModule,
     AuthModule,

@@ -16,8 +16,8 @@ import {
 import { FindAllInterface, ProductsService } from './products.service';
 import { Product } from './product.model';
 import { ProductDto } from './product.dto';
-import { UserID } from 'src/users/userId.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { UserID } from '../users/userId.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { COUNTRIES } from '../data/countries';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { unlink as deleteFile, existsSync as fileExists } from 'fs';

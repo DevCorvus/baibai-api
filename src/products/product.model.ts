@@ -9,7 +9,7 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import { User } from 'src/users/user.model';
+import { User } from '../users/user.model';
 
 export const ProductStatus = [
   'new',
