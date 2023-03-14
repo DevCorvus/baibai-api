@@ -83,7 +83,11 @@ export class ProductsService {
   }
 
   async exists(id: string, userId?: string): Promise<boolean> {
-    const result = await this.productModel.count({ where: { id, userId } });
+    const where: WhereOptions<any> = { id };
+
+    if (userId) where.userId = userId;
+
+    const result = await this.productModel.count({ where });
     return result > 0;
   }
 }

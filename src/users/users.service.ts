@@ -35,12 +35,12 @@ export class UsersService {
     });
   }
 
-  async isAdmin(id: string): Promise<boolean> {
+  async isAdmin(id: string): Promise<boolean | null> {
     const user = await this.userModel.findOne({
       where: { id },
       attributes: { include: ['admin'] },
     });
 
-    return user.admin;
+    return user ? user.admin : null;
   }
 }

@@ -23,6 +23,7 @@ import { ProductsModule } from './products/products.module';
       useFactory: (config: ConfigService) => ({
         dialect: 'sqlite',
         storage: config.get('NODE_ENV') === 'test' ? ':memory:' : './db.sqlite',
+        logging: config.get('NODE_ENV') !== 'test',
         autoLoadModels: true,
         synchronize: true,
       }),

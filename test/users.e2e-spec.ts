@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { mockUser } from './mock-data/users';
+import { mockUserDto } from './mock-data/users';
 import { UsersService } from '../src/users/users.service';
 import { User } from '../src/users/user.model';
 
@@ -25,7 +25,7 @@ describe('UsersController (e2e)', () => {
   it('/users (POST)', () => {
     return request(app.getHttpServer())
       .post('/users')
-      .send(mockUser)
+      .send(mockUserDto)
       .expect(201);
   });
 
@@ -33,7 +33,7 @@ describe('UsersController (e2e)', () => {
     it('username not alphanumeric', async () => {
       const res = await request(app.getHttpServer())
         .post('/users')
-        .send({ username: '<script>', password: mockUser.password });
+        .send({ username: '<script>', password: mockUserDto.password });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
@@ -46,7 +46,7 @@ describe('UsersController (e2e)', () => {
     it('username too long', async () => {
       const res = await request(app.getHttpServer())
         .post('/users')
-        .send({ username: 'a'.repeat(101), password: mockUser.password });
+        .send({ username: 'a'.repeat(101), password: mockUserDto.password });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
@@ -59,7 +59,7 @@ describe('UsersController (e2e)', () => {
     it('username too short', async () => {
       const res = await request(app.getHttpServer())
         .post('/users')
-        .send({ username: 'a'.repeat(3), password: mockUser.password });
+        .send({ username: 'a'.repeat(3), password: mockUserDto.password });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
@@ -72,7 +72,7 @@ describe('UsersController (e2e)', () => {
     it('password too short', async () => {
       const res = await request(app.getHttpServer())
         .post('/users')
-        .send({ username: mockUser.username, password: '12345' });
+        .send({ username: mockUserDto.username, password: '12345' });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
@@ -85,7 +85,7 @@ describe('UsersController (e2e)', () => {
     it('password too long', async () => {
       const res = await request(app.getHttpServer())
         .post('/users')
-        .send({ username: mockUser.username, password: 'a'.repeat(251) });
+        .send({ username: mockUserDto.username, password: 'a'.repeat(251) });
 
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
@@ -100,10 +100,10 @@ describe('UsersController (e2e)', () => {
     let accessToken: string;
 
     beforeEach(async () => {
-      await usersService.create(mockUser);
+      await usersService.create(mockUserDto);
       const res = await request(app.getHttpServer())
         .post('/auth/login')
-        .send(mockUser);
+        .send(mockUserDto);
 
       accessToken = (res.body as { access_token: string }).access_token;
     });
@@ -119,7 +119,7 @@ describe('UsersController (e2e)', () => {
 
       expect(userProfile).toMatchObject({
         id: expect.any(String),
-        username: mockUser.username,
+        username: mockUserDto.username,
         admin: false,
       });
       expect(userProfile).toEqual(
