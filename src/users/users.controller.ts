@@ -16,10 +16,10 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post()
-  async create(@Body() body: UserDto): Promise<void> {
+  async create(@Body() body: UserDto): Promise<true> {
     try {
       await this.usersService.create(body);
-      return;
+      return true;
     } catch (_) {
       throw new ConflictException('User already exists');
     }

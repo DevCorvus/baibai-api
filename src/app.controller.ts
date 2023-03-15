@@ -6,7 +6,7 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('healthcheck')
-  healthcheck(): string {
-    return;
+  healthcheck(): true {
+    return true;
   }
 }

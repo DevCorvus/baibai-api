@@ -20,10 +20,16 @@ import { UserID } from '../users/userId.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { COUNTRIES } from '../data/countries';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { unlink as deleteFile, existsSync as fileExists } from 'fs';
+import { unlink, existsSync as fileExists } from 'fs';
 import { Request, Response } from 'express';
 import { UploadedProductImage } from './product-image-upload.decorator';
 import * as path from 'path';
+
+function deleteFile(path: string) {
+  unlink(path, (err) => {
+    if (err) console.error(err);
+  });
+}
 
 @Controller('products')
 export class ProductsController {
@@ -78,7 +84,7 @@ export class ProductsController {
       );
       return newProduct;
     } catch (error) {
-      deleteFile(image.path, console.error);
+      deleteFile(image.path);
       throw error;
     }
   }
@@ -120,7 +126,7 @@ export class ProductsController {
             'uploads',
             product.previewImageUrl,
           );
-          deleteFile(previousImagePath, console.error);
+          deleteFile(previousImagePath);
         }
 
         return updated;
@@ -128,7 +134,7 @@ export class ProductsController {
         return false;
       }
     } catch (error) {
-      deleteFile(image.path, console.error);
+      deleteFile(image.path);
       throw error;
     }
   }
@@ -146,7 +152,7 @@ export class ProductsController {
 
       if (deleted) {
         const imagePath = path.resolve('uploads', product.previewImageUrl);
-        deleteFile(imagePath, console.error);
+        deleteFile(imagePath);
       }
 
       return deleted;

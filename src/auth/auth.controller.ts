@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { LocalAuthGuard } from './local-auth.guard';
-import { AuthService } from './auth.service';
+import { AuthService, UserInterface } from './auth.service';
 import { Request } from 'express';
 import { RefreshTokenDto } from './refresh-token.dto';
 
@@ -18,7 +18,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   login(@Req() req: Request) {
-    return this.authService.validateJwtTokens(req.user);
+    return this.authService.validateJwtTokens(req.user as UserInterface);
   }
 
   @Post('refresh')

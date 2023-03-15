@@ -1,6 +1,5 @@
 import { UsersService } from '../users/users.service';
 import { User } from '../users/user.model';
-import { createMemDb } from '../utils/testing-helpers/createMemDb';
 import { Product } from './product.model';
 import { ProductsService } from './products.service';
 import { Sequelize } from 'sequelize-typescript';
@@ -8,25 +7,42 @@ import { PasswordService } from '../password/password.service';
 import {
   mockProductDto,
   mockProductUpdateDto,
+  mockFilename,
+  mockFilenameUpdate,
 } from '../../test/mock-data/products';
 import { mockUserDto } from '../../test/mock-data/users';
+import { Test, TestingModule } from '@nestjs/testing';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { sequelizeTestingModuleConfig } from '../../test/config/sequelize';
 
 describe('ProductsService', () => {
+  let module: TestingModule;
+  let memDb: Sequelize;
   let usersService: UsersService;
   let productsService: ProductsService;
-  let memDb: Sequelize;
-
-  const mockFilename = 'image.jpg';
 
   beforeAll(async () => {
-    memDb = await createMemDb([Product, User]);
-    usersService = new UsersService(User, new PasswordService());
-    productsService = new ProductsService(Product, usersService);
+    module = await Test.createTestingModule({
+      imports: [
+        SequelizeModule.forRoot(sequelizeTestingModuleConfig),
+        SequelizeModule.forFeature([Product, User]),
+      ],
+      providers: [ProductsService, UsersService, PasswordService],
+    }).compile();
+
+    memDb = module.get(Sequelize);
+    usersService = module.get<UsersService>(UsersService);
+    productsService = module.get<ProductsService>(ProductsService);
   });
 
-  afterAll(() => memDb.close());
+  afterAll(async () => {
+    await module.close();
+  });
 
-  it('should be defined', () => {
+  it('should dependencies be defined', () => {
+    expect(module).toBeDefined();
+    expect(memDb).toBeDefined();
+    expect(usersService).toBeDefined();
     expect(productsService).toBeDefined();
   });
 
@@ -53,9 +69,9 @@ describe('ProductsService', () => {
         ...mockProductDto,
         previewImageUrl: mockFilename,
         userId: user.id,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
-      expect(new Date(newProduct.createdAt).getTime()).not.toBeNaN();
-      expect(new Date(newProduct.updatedAt).getTime()).not.toBeNaN();
     });
   });
 
@@ -237,7 +253,7 @@ describe('ProductsService', () => {
         product.id,
         user.id,
         mockProductUpdateDto,
-        mockFilename,
+        mockFilenameUpdate,
       );
       const updatedProduct = await productsService.findOne(product.id);
 
@@ -247,6 +263,7 @@ describe('ProductsService', () => {
         userId: product.userId,
         ...mockProductUpdateDto,
         price: Number(mockProductUpdateDto.price),
+        previewImageUrl: mockFilenameUpdate,
         createdAt: product.createdAt,
         updatedAt: expect.any(Date),
         user: {

@@ -4,7 +4,12 @@ import { PasswordService } from '../password/password.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
-interface JwtPayload {
+export interface UserInterface {
+  id: string;
+  username: string;
+}
+
+export interface JwtPayload {
   username: string;
   sub: string;
 }
@@ -18,7 +23,10 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserInterface | null> {
     const user = await this.usersService.findOne(username);
     if (!user) return null;
 
@@ -34,7 +42,7 @@ export class AuthService {
     };
   }
 
-  async validateJwtTokens(user: any) {
+  async validateJwtTokens(user: UserInterface) {
     return this.generateTokens({ username: user.username, sub: user.id });
   }
 

@@ -2,22 +2,37 @@ import { UsersService } from './users.service';
 import { mockUserDto } from '../../test/mock-data/users';
 import { PasswordService } from '../password/password.service';
 import { User } from './user.model';
-import { Sequelize } from 'sequelize-typescript';
-import { createMemDb } from '../utils/testing-helpers/createMemDb';
 import { Product } from '../products/product.model';
+import { Test, TestingModule } from '@nestjs/testing';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { sequelizeTestingModuleConfig } from '../../test/config/sequelize';
+import { Sequelize } from 'sequelize-typescript';
 
 describe('UsersService', () => {
-  let usersService: UsersService;
+  let module: TestingModule;
   let memDb: Sequelize;
+  let usersService: UsersService;
 
   beforeAll(async () => {
-    memDb = await createMemDb([User, Product]);
-    usersService = new UsersService(User, new PasswordService());
+    module = await Test.createTestingModule({
+      imports: [
+        SequelizeModule.forRoot(sequelizeTestingModuleConfig),
+        SequelizeModule.forFeature([User, Product]),
+      ],
+      providers: [UsersService, PasswordService],
+    }).compile();
+
+    memDb = module.get(Sequelize);
+    usersService = module.get<UsersService>(UsersService);
   });
 
-  afterAll(() => memDb.close());
+  afterAll(async () => {
+    await module.close();
+  });
 
-  it('should be defined', () => {
+  it('should dependencies be defined', () => {
+    expect(module).toBeDefined();
+    expect(memDb).toBeDefined();
     expect(usersService).toBeDefined();
   });
 
@@ -34,9 +49,9 @@ describe('UsersService', () => {
         username: mockUserDto.username,
         password: expect.any(String),
         admin: false,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
-      expect(new Date(newUser.createdAt).getTime()).not.toBeNaN();
-      expect(new Date(newUser.updatedAt).getTime()).not.toBeNaN();
     });
 
     it('should throw an error when trying to create already existing user', async () => {
@@ -63,9 +78,9 @@ describe('UsersService', () => {
         username: mockUserDto.username,
         password: expect.any(String),
         admin: false,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
-      expect(new Date(userFound.createdAt).getTime()).not.toBeNaN();
-      expect(new Date(userFound.updatedAt).getTime()).not.toBeNaN();
     });
 
     it('should not found a user', async () => {
@@ -79,12 +94,12 @@ describe('UsersService', () => {
         id: expect.any(String),
         username: mockUserDto.username,
         admin: false,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
       expect(userProfile).toEqual(
         expect.not.objectContaining({ password: expect.any(String) }),
       );
-      expect(new Date(userProfile.createdAt).getTime()).not.toBeNaN();
-      expect(new Date(userProfile.updatedAt).getTime()).not.toBeNaN();
     });
 
     it('should not found a user profile', async () => {
