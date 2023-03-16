@@ -17,10 +17,11 @@ import {
   mockProductUpdateDto,
 } from '../../test/mock-data/products';
 import { mockUserDto } from '../../test/mock-data/users';
-import { request } from 'express';
+import { Request } from 'express';
 import { copyImageIntoUploads } from '../../test/utils/copyImageIntoUploads';
 import { existsSync, unlink } from 'fs';
 import { resolve } from 'path';
+import { mock } from 'jest-mock-extended';
 
 describe('ProductsController', () => {
   let module: TestingModule;
@@ -73,7 +74,7 @@ describe('ProductsController', () => {
     });
 
     it('should create a product', async () => {
-      const mockRequest = request;
+      const mockRequest = mock<Request>();
       mockRequest['filename'] = mockFilename;
 
       const product = await productsController.create(
@@ -204,7 +205,7 @@ describe('ProductsController', () => {
         });
 
         it('should update a product with image', async () => {
-          const mockRequest = request;
+          const mockRequest = mock<Request>();
           mockRequest['filename'] = mockFilenameUpdate;
 
           const productUpdated = await productsController.updateWithImage(
