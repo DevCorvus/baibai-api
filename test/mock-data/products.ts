@@ -22,8 +22,3 @@ export const mockProductUpdateDto: ProductDto = {
 
 export const mockFilename = 'test.jpg';
 export const mockFilenameUpdate = 'better-test.jpg';
-
-export const mockImageFile: Partial<Express.Multer.File> = {
-  originalname: mockFilename,
-  mimetype: 'image/jpeg',
-};

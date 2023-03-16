@@ -12,6 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
   Query,
+  UseFilters,
 } from '@nestjs/common';
 import { FindAllInterface, ProductsService } from './products.service';
 import { Product } from './product.model';
@@ -23,7 +24,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { unlink, existsSync as fileExists } from 'fs';
 import { Request, Response } from 'express';
 import { UploadedProductImage } from './product-image-upload.decorator';
-import * as path from 'path';
+import { resolve } from 'path';
+import { ProductValidationExceptionFilter } from './product-validation-exception.filter';
 
 function deleteFile(path: string) {
   unlink(path, (err) => {
@@ -50,7 +52,7 @@ export class ProductsController {
     @Param('filename') filename: string,
     @Res() res: Response,
   ) {
-    if (!fileExists(path.resolve('uploads', filename))) {
+    if (!fileExists(resolve('uploads', filename))) {
       throw new NotFoundException();
     }
     res.sendFile(filename, { root: 'uploads' });
@@ -67,6 +69,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseFilters(ProductValidationExceptionFilter)
   @UseInterceptors(FileInterceptor('image'))
   @Post()
   async create(
@@ -100,6 +103,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @UseFilters(ProductValidationExceptionFilter)
   @UseInterceptors(FileInterceptor('image'))
   @Put(':productId/multipart')
   async updateWithImage(
@@ -122,10 +126,7 @@ export class ProductsController {
         );
 
         if (updated) {
-          const previousImagePath = path.resolve(
-            'uploads',
-            product.previewImageUrl,
-          );
+          const previousImagePath = resolve('uploads', product.previewImageUrl);
           deleteFile(previousImagePath);
         }
 
@@ -151,7 +152,7 @@ export class ProductsController {
       const deleted = await this.productsService.delete(productId, userId);
 
       if (deleted) {
-        const imagePath = path.resolve('uploads', product.previewImageUrl);
+        const imagePath = resolve('uploads', product.previewImageUrl);
         deleteFile(imagePath);
       }
 

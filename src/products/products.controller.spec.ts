@@ -12,15 +12,13 @@ import { PasswordService } from '../password/password.service';
 import {
   mockFilename,
   mockFilenameUpdate,
-  mockImageFile,
   mockProductDto,
   mockProductUpdateDto,
 } from '../../test/mock-data/products';
 import { mockUserDto } from '../../test/mock-data/users';
 import { Request } from 'express';
 import { copyImageIntoUploads } from '../../test/utils/copyImageIntoUploads';
-import { existsSync, unlink } from 'fs';
-import { resolve } from 'path';
+import { deleteImageFromUploads } from '../../test/utils/deleteImageFromUploads';
 import { mock } from 'jest-mock-extended';
 
 describe('ProductsController', () => {
@@ -29,6 +27,8 @@ describe('ProductsController', () => {
   let usersService: UsersService;
   let productsService: ProductsService;
   let productsController: ProductsController;
+
+  const mockImageFile = mock<Express.Multer.File>();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -80,7 +80,7 @@ describe('ProductsController', () => {
       const product = await productsController.create(
         user.id,
         mockProductDto,
-        mockImageFile as Express.Multer.File,
+        mockImageFile,
         mockRequest,
       );
 
@@ -170,14 +170,7 @@ describe('ProductsController', () => {
           copyImageIntoUploads();
         });
 
-        afterEach(() => {
-          const mockImageFilePath = resolve('uploads/test.jpg');
-          if (existsSync(mockImageFilePath)) {
-            unlink(mockImageFilePath, (err) => {
-              if (err) console.error(err);
-            });
-          }
-        });
+        afterEach(deleteImageFromUploads);
 
         it('should update a product', async () => {
           const productUpdated = await productsController.update(
@@ -212,7 +205,7 @@ describe('ProductsController', () => {
             user.id,
             product.id,
             mockProductUpdateDto,
-            mockImageFile as Express.Multer.File,
+            mockImageFile,
             mockRequest,
           );
           expect(productUpdated).toBe(true);
