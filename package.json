@@ -1,10 +1,14 @@
 {
-  "name": "server",
+  "name": "baibai-api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "A NestJS RESTful API for the Baibai Client (demo)",
+  "author": {
+    "name": "Luis Portillo",
+    "email": "devcorvus.contact@gmail.com",
+    "url": "https://www.devcorvus.com/"
+  },
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
