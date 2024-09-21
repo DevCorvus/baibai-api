@@ -3,6 +3,7 @@ import { UsersService } from '../users/users.service';
 import { PasswordService } from '../password/password.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AuthTokensDto } from './auth.dto';
 
 export interface UserInterface {
   id: string;
@@ -57,7 +58,7 @@ export class AuthService {
     });
   }
 
-  private generateTokens(payload: JwtPayload) {
+  private generateTokens(payload: JwtPayload): AuthTokensDto {
     return {
       access_token: this.jwtService.sign(payload),
       refresh_token: this.jwtService.sign(payload, {

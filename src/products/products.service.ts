@@ -1,15 +1,16 @@
 import { Product } from '../products/product.model';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { ProductDto } from './product.dto';
+import {
+  CreateProductDto,
+  ProductDetailsDto,
+  ProductDto,
+  ProductItemDto,
+  ProductListQueryOptionsDto,
+} from './product.dto';
 import { User } from '../users/user.model';
 import { UsersService } from '../users/users.service';
 import { Op, WhereOptions } from 'sequelize';
-
-export interface FindAllInterface {
-  search?: string;
-  username?: string;
-}
 
 const displayableProductListAttributes = [
   'id',
@@ -28,7 +29,10 @@ export class ProductsService {
     private usersService: UsersService,
   ) {}
 
-  async findAll({ search, username }: FindAllInterface): Promise<Product[]> {
+  async findAll({
+    search,
+    username,
+  }: ProductListQueryOptionsDto): Promise<ProductItemDto[]> {
     const where: WhereOptions<any> = {};
 
     if (search) where.name = { [Op.like]: `%${search}%` };
@@ -41,25 +45,38 @@ export class ProductsService {
       }
     }
 
-    return this.productModel.findAll({
+    const products = await this.productModel.findAll({
       where,
       attributes: displayableProductListAttributes,
     });
+
+    return products as ProductItemDto[];
   }
 
-  findOne(id: string): Promise<Product | null> {
-    return this.productModel.findOne({
+  async findOne(id: string): Promise<ProductDetailsDto | null> {
+    const product = await this.productModel.findOne({
       where: { id },
       include: [{ model: User, attributes: ['username', 'createdAt'] }],
     });
+
+    return product as ProductDetailsDto;
   }
 
-  create(userId: string, data: ProductDto, filename: string): Promise<Product> {
-    return this.productModel.create({
+  async create(
+    userId: string,
+    data: CreateProductDto,
+    filename: string,
+  ): Promise<ProductDto> {
+    const product = await this.productModel.create({
       ...data,
       userId,
       previewImageUrl: filename,
     });
+
+    product.price = Number(product.price);
+    product.quantity = Number(product.quantity);
+
+    return product as ProductDto;
   }
 
   async update(

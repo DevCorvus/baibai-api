@@ -13,10 +13,17 @@ import {
   UseInterceptors,
   Query,
   UseFilters,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { FindAllInterface, ProductsService } from './products.service';
-import { Product } from './product.model';
-import { ProductDto } from './product.dto';
+import { ProductsService } from './products.service';
+import {
+  CreateProductDto,
+  CreateProductRequestDto,
+  ProductDetailsDto,
+  ProductDto,
+  ProductItemDto,
+  ProductListQueryOptionsDto,
+} from './product.dto';
 import { UserID } from '../users/userId.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { COUNTRIES } from '../data/countries';
@@ -26,6 +33,16 @@ import { Request, Response } from 'express';
 import { UploadedProductImage } from './product-image-upload.decorator';
 import { resolve } from 'path';
 import { ProductValidationExceptionFilter } from './product-validation-exception.filter';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 function deleteFile(path: string) {
   unlink(path, (err) => {
@@ -33,12 +50,21 @@ function deleteFile(path: string) {
   });
 }
 
+const productSchema: SchemaObject = {
+  type: 'string',
+  format: 'binary',
+  description: 'Product image file',
+};
+
+@ApiTags('products')
 @Controller('products')
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
   @Get()
-  findAll(@Query() queries: FindAllInterface): Promise<Product[]> {
+  findAll(
+    @Query() queries: ProductListQueryOptionsDto,
+  ): Promise<ProductItemDto[]> {
     return this.productsService.findAll(queries);
   }
 
@@ -47,6 +73,17 @@ export class ProductsController {
     return COUNTRIES;
   }
 
+  @ApiOkResponse({
+    content: {
+      'image/png': { schema: productSchema },
+      'image/jpeg': { schema: productSchema },
+      'image/webp': { schema: productSchema },
+    },
+  })
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    example: new NotFoundException().getResponse(),
+  })
   @Get('preview/:filename')
   findProductPreviewImage(
     @Param('filename') filename: string,
@@ -58,27 +95,41 @@ export class ProductsController {
     res.sendFile(filename, { root: 'uploads' });
   }
 
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    example: new NotFoundException('Product not found').getResponse(),
+  })
   @Get(':productId')
-  async findOne(@Param('productId') productId: string): Promise<Product> {
+  async findOne(
+    @Param('productId') productId: string,
+  ): Promise<ProductDetailsDto> {
     const product = await this.productsService.findOne(productId);
-    if (product) {
-      return product;
-    } else {
+
+    if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    return product;
   }
 
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedException,
+    example: new UnauthorizedException().getResponse(),
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateProductRequestDto })
   @UseGuards(JwtAuthGuard)
   @UseFilters(ProductValidationExceptionFilter)
   @UseInterceptors(FileInterceptor('image'))
   @Post()
   async create(
     @UserID() userId: string,
-    @Body() body: ProductDto,
+    @Body() body: CreateProductDto,
     @UploadedProductImage()
     image: Express.Multer.File,
     @Req() req: Request,
-  ): Promise<Product> {
+  ): Promise<ProductDto> {
     try {
       const newProduct = await this.productsService.create(
         userId,
@@ -92,16 +143,40 @@ export class ProductsController {
     }
   }
 
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedException,
+    example: new UnauthorizedException().getResponse(),
+  })
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    example: new NotFoundException('Product not found').getResponse(),
+  })
   @UseGuards(JwtAuthGuard)
   @Put(':productId')
-  update(
+  async update(
     @UserID() userId: string,
     @Param('productId') productId: string,
     @Body() body: ProductDto,
   ): Promise<boolean> {
+    const productExists = await this.productsService.exists(productId, userId);
+
+    if (!productExists) {
+      throw new NotFoundException('Product not found');
+    }
+
     return this.productsService.update(productId, userId, body);
   }
 
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedException,
+    example: new UnauthorizedException().getResponse(),
+  })
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    example: new NotFoundException('Product not found').getResponse(),
+  })
   @UseGuards(JwtAuthGuard)
   @UseFilters(ProductValidationExceptionFilter)
   @UseInterceptors(FileInterceptor('image'))
@@ -117,29 +192,38 @@ export class ProductsController {
     try {
       const product = await this.productsService.findOne(productId);
 
-      if (product) {
-        const updated = await this.productsService.update(
-          productId,
-          userId,
-          body,
-          req['filename'],
-        );
-
-        if (updated) {
-          const previousImagePath = resolve('uploads', product.previewImageUrl);
-          deleteFile(previousImagePath);
-        }
-
-        return updated;
-      } else {
-        return false;
+      if (!product) {
+        throw new NotFoundException('Product not found');
       }
+
+      const updated = await this.productsService.update(
+        productId,
+        userId,
+        body,
+        req['filename'],
+      );
+
+      if (updated) {
+        const previousImagePath = resolve('uploads', product.previewImageUrl);
+        deleteFile(previousImagePath);
+      }
+
+      return updated;
     } catch (error) {
       deleteFile(image.path);
       throw error;
     }
   }
 
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({
+    type: UnauthorizedException,
+    example: new UnauthorizedException().getResponse(),
+  })
+  @ApiNotFoundResponse({
+    type: NotFoundException,
+    example: new NotFoundException('Product not found').getResponse(),
+  })
   @UseGuards(JwtAuthGuard)
   @Delete(':productId')
   async delete(
@@ -148,17 +232,17 @@ export class ProductsController {
   ): Promise<boolean> {
     const product = await this.productsService.findOne(productId);
 
-    if (product) {
-      const deleted = await this.productsService.delete(productId, userId);
-
-      if (deleted) {
-        const imagePath = resolve('uploads', product.previewImageUrl);
-        deleteFile(imagePath);
-      }
-
-      return deleted;
-    } else {
-      return false;
+    if (!product) {
+      throw new NotFoundException('Product not found');
     }
+
+    const deleted = await this.productsService.delete(productId, userId);
+
+    if (deleted) {
+      const imagePath = resolve('uploads', product.previewImageUrl);
+      deleteFile(imagePath);
+    }
+
+    return deleted;
   }
 }
